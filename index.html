@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Artinnova Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<!-- React -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!-- Firebase v9 compat (works on all browsers including iOS Safari) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  try {
+    var firebaseConfig = {
+      apiKey: "AIzaSyDfzBl7A2wGuCV7qdyYunRFKF4Sxud7bTo",
+      authDomain: "artinnova-studio-87e28.firebaseapp.com",
+      projectId: "artinnova-studio-87e28",
+      storageBucket: "artinnova-studio-87e28.firebasestorage.app",
+      messagingSenderId: "320291127133",
+      appId: "1:320291127133:web:2d94dfd88f2840750b32b4"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    window.__db = firebase.firestore();
+    window.__fbReady = true;
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    window.__fbReady = false;
+  }
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-primary:#0a0a0f;--bg-secondary:#0f0f18;--bg-card:#13131e;--bg-card2:#161625;
+  --bg-glass:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --gold:#c9a84c;--gold2:#e8c96d;--gold-dim:rgba(201,168,76,0.15);
+  --rose:#e85d75;--rose-dim:rgba(232,93,117,0.15);
+  --teal:#2dd4bf;--teal-dim:rgba(45,212,191,0.12);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.12);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,0.12);
+  --text-primary:#f0ede8;--text-secondary:#9997a3;--text-dim:#5a5870;
+  --success:#4ade80;--warning:#fbbf24;--danger:#f87171;
+  --sidebar-w:260px;--header-h:64px;
+}
+html{font-family:'Cairo',sans-serif;background:var(--bg-primary);color:var(--text-primary);font-size:15px}
+body{min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg-secondary)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+input,select,textarea,button{font-family:'Cairo',sans-serif;outline:none}
+button{cursor:pointer;border:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.95)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease forwards}
+/* LOADING */
+.app-loading{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:var(--bg-primary)}
+.app-loading .logo{width:72px;height:72px;background:linear-gradient(135deg,var(--gold),var(--rose));border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:32px;animation:pulse 1.5s infinite}
+.app-loading p{color:var(--text-secondary);font-size:14px}
+.spinner{width:24px;height:24px;border:3px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+/* SYNC DOT */
+.sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.sync-dot.online{background:var(--success);box-shadow:0 0 6px var(--success)}
+.sync-dot.offline{background:var(--rose)}
+.sync-dot.syncing{background:var(--warning);animation:pulse 1s infinite}
+/* AUTH */
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg-primary);position:relative;overflow:hidden}
+.auth-bg-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.25;pointer-events:none}
+.auth-bg-orb:nth-child(1){width:500px;height:500px;background:radial-gradient(circle,#c9a84c,transparent);top:-100px;right:-100px}
+.auth-bg-orb:nth-child(2){width:400px;height:400px;background:radial-gradient(circle,#e85d75,transparent);bottom:-100px;left:-50px}
+.auth-card{position:relative;background:var(--bg-card);border:1px solid var(--border2);border-radius:24px;padding:48px 40px;width:100%;max-width:440px;box-shadow:0 40px 80px rgba(0,0,0,.6)}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--gold),var(--rose));border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
+.auth-logo h1{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--gold2),var(--text-primary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-logo p{color:var(--text-secondary);font-size:13px;margin-top:4px}
+.auth-tabs{display:flex;background:var(--bg-secondary);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px}
+.auth-tab{flex:1;padding:10px;border-radius:9px;text-align:center;font-size:14px;font-weight:600;color:var(--text-secondary);background:transparent;transition:all .2s;cursor:pointer;border:none}
+.auth-tab.active{background:var(--bg-card2);color:var(--gold)}
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px}
+.form-input{width:100%;padding:12px 16px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;color:var(--text-primary);font-size:14px;transition:all .2s}
+.form-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
+.form-input::placeholder{color:var(--text-dim)}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),#b8933e);border-radius:12px;color:#000;font-weight:700;font-size:15px;transition:all .2s;border:none;cursor:pointer}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(201,168,76,.35)}
+.auth-error{background:var(--rose-dim);border:1px solid rgba(232,93,117,.3);border-radius:10px;padding:12px;color:var(--rose);font-size:13px;margin-bottom:16px;text-align:center}
+/* LAYOUT */
+.app-layout{display:flex;min-height:100vh;background:var(--bg-primary)}
+.sidebar{width:var(--sidebar-w);background:var(--bg-secondary);border-left:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;right:0;z-index:100;transition:transform .3s}
+.sidebar-header{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-brand{display:flex;align-items:center;gap:12px}
+.brand-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--rose));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.brand-text h2{font-size:16px;font-weight:800;color:var(--gold2)}
+.brand-text p{font-size:11px;color:var(--text-dim);margin-top:1px;display:flex;align-items:center;gap:4px}
+.sidebar-nav{flex:1;padding:12px;overflow-y:auto}
+.nav-section{margin-bottom:20px}
+.nav-section-label{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:1.2px;text-transform:uppercase;padding:0 10px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;color:var(--text-secondary);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:2px;border:none;background:transparent;width:100%;text-align:right}
+.nav-item:hover{background:var(--bg-glass);color:var(--text-primary)}
+.nav-item.active{background:var(--gold-dim);color:var(--gold);font-weight:600}
+.nav-icon{font-size:18px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-glass);border-radius:12px}
+.user-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--rose));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#000;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:11px;color:var(--text-dim)}
+.main-content{flex:1;margin-right:var(--sidebar-w);display:flex;flex-direction:column;min-height:100vh;transition:margin .3s}
+.top-header{height:var(--header-h);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:50}
+.header-toggle{background:var(--bg-glass);border:1px solid var(--border);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text-secondary);transition:all .2s}
+.header-title{flex:1}
+.header-title h1{font-size:18px;font-weight:700;color:var(--text-primary)}
+.header-title p{font-size:12px;color:var(--text-secondary)}
+.header-actions{display:flex;align-items:center;gap:8px}
+.header-date{background:var(--bg-glass);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:12px;color:var(--text-secondary)}
+.page-content{padding:24px;flex:1}
+/* CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:22px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.stat-card.rose::before{background:linear-gradient(90deg,var(--rose),#f472b6)}
+.stat-card.teal::before{background:linear-gradient(90deg,var(--teal),#6ee7b7)}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),#c4b5fd)}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
+.stat-card.gold .stat-icon{background:var(--gold-dim);color:var(--gold)}
+.stat-card.rose .stat-icon{background:var(--rose-dim);color:var(--rose)}
+.stat-card.teal .stat-icon{background:var(--teal-dim);color:var(--teal)}
+.stat-card.purple .stat-icon{background:var(--purple-dim);color:var(--purple)}
+.stat-value{font-size:26px;font-weight:800;color:var(--text-primary);letter-spacing:-.5px;line-height:1}
+.stat-label{font-size:12px;color:var(--text-secondary);margin-top:6px;font-weight:500}
+.stat-sub{font-size:11px;color:var(--text-dim);margin-top:4px}
+/* BTNS */
+.btn{padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;transition:all .2s;display:inline-flex;align-items:center;gap:7px;cursor:pointer;border:none}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#b8933e);color:#000}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(201,168,76,.3)}
+.btn-gold:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text-secondary)}
+.btn-outline:hover{background:var(--bg-glass);color:var(--text-primary)}
+.btn-danger{background:var(--rose-dim);border:1px solid rgba(232,93,117,.3);color:var(--rose)}
+.btn-danger:hover{background:rgba(232,93,117,.25)}
+.btn-sm{padding:7px 13px;font-size:12px;border-radius:8px}
+.btn-icon{width:34px;height:34px;padding:0;justify-content:center;font-size:15px}
+/* TABLE */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+.card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-body{padding:22px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:1px solid var(--border)}
+th{padding:12px 16px;text-align:right;font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+td{padding:14px 16px;font-size:13px;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,.03)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:var(--bg-glass)}
+.td-main{color:var(--text-primary);font-weight:600}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-gold{background:var(--gold-dim);color:var(--gold)}
+.badge-rose{background:var(--rose-dim);color:var(--rose)}
+.badge-teal{background:var(--teal-dim);color:var(--teal)}
+.badge-purple{background:var(--purple-dim);color:var(--purple)}
+.badge-blue{background:var(--blue-dim);color:var(--blue)}
+.badge-success{background:rgba(74,222,128,.12);color:var(--success)}
+.badge-warning{background:rgba(251,191,36,.12);color:var(--warning)}
+.badge-danger{background:var(--rose-dim);color:var(--rose)}
+.badge-gray{background:rgba(255,255,255,.07);color:var(--text-secondary)}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal{background:var(--bg-card);border:1px solid var(--border2);border-radius:24px;width:100%;max-width:680px;position:relative;animation:fadeIn .25s ease}
+.modal-xl{max-width:820px}
+.modal-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:18px;font-weight:700;color:var(--text-primary)}
+.modal-close{width:32px;height:32px;background:var(--bg-glass);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);font-size:18px;transition:all .2s}
+.modal-close:hover{background:var(--rose-dim);color:var(--rose)}
+.modal-body{padding:24px 28px}
+.modal-footer{padding:16px 28px 24px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border)}
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-full{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fl{font-size:13px;font-weight:600;color:var(--text-secondary)}
+.fc{padding:11px 14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;color:var(--text-primary);font-size:14px;transition:all .2s;-webkit-appearance:none}
+.fc:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
+.fc::placeholder{color:var(--text-dim)}
+select.fc{cursor:pointer}
+select.fc option{background:var(--bg-card)}
+textarea.fc{resize:vertical;min-height:80px}
+.fsec{grid-column:1/-1;font-size:14px;font-weight:700;color:var(--gold);padding-bottom:8px;border-bottom:1px solid var(--border)}
+.chk-group{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1}
+.chk-item{display:flex;align-items:center;gap:8px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;transition:all .2s;user-select:none;font-size:13px;color:var(--text-secondary)}
+.chk-item.on{background:var(--gold-dim);border-color:rgba(201,168,76,.4);color:var(--gold)}
+.chk-dot{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.chk-item.on .chk-dot{background:var(--gold);border-color:var(--gold);color:#000}
+/* TODAY */
+.today-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.today-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:20px;position:relative;overflow:hidden;transition:transform .2s}
+.today-card:hover{transform:translateY(-2px)}
+.today-card::before{content:'';position:absolute;top:0;right:0;bottom:0;width:3px}
+.ta::before{background:linear-gradient(180deg,var(--gold),transparent)}
+.tb::before{background:linear-gradient(180deg,var(--rose),transparent)}
+.tc::before{background:linear-gradient(180deg,var(--teal),transparent)}
+.today-card-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.today-name{font-size:17px;font-weight:700;color:var(--text-primary)}
+.today-time{font-size:12px;color:var(--text-secondary);background:var(--bg-glass);padding:4px 10px;border-radius:20px;border:1px solid var(--border)}
+.info-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);margin-bottom:8px}
+.svc-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+/* FINANCE */
+.fin-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.fin-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:18px}
+.fin-lbl{font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:500}
+.fin-val{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.c-income{color:var(--success)}.c-expense{color:var(--rose)}.c-profit{color:var(--gold2)}.c-neutral{color:var(--text-primary)}
+/* WORKER */
+.worker-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:20px;transition:transform .2s}
+.worker-card:hover{transform:translateY(-2px)}
+.w-avatar{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--rose),#f472b6);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin-bottom:14px}
+.w-name{font-size:16px;font-weight:700;color:var(--text-primary)}
+.w-role{font-size:12px;color:var(--text-secondary);margin-top:3px}
+.w-stats{display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.w-stat{text-align:center;flex:1}
+.w-stat-val{font-size:18px;font-weight:700;color:var(--gold)}
+.w-stat-lbl{font-size:11px;color:var(--text-dim)}
+/* MISC */
+.empty-state{text-align:center;padding:60px 20px}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+.empty-title{font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px}
+.search-bar{display:flex;align-items:center;gap:10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:0 14px;transition:border-color .2s}
+.search-bar:focus-within{border-color:var(--gold)}
+.search-bar input{flex:1;background:none;border:none;padding:10px 0;font-size:14px;color:var(--text-primary)}
+.search-bar input::placeholder{color:var(--text-dim)}
+.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fbtn{background:var(--bg-glass);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .2s}
+.fbtn:hover,.fbtn.on{background:var(--gold-dim);border-color:rgba(201,168,76,.4);color:var(--gold)}
+.alert{border-radius:12px;padding:14px 16px;font-size:13px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.a-info{background:var(--blue-dim);border:1px solid rgba(96,165,250,.25);color:var(--blue)}
+.a-warn{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:var(--warning)}
+.a-danger{background:var(--rose-dim);border:1px solid rgba(232,93,117,.3);color:var(--rose)}
+.a-success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:var(--success)}
+.prc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}
+.prc-row{display:flex;align-items:center;gap:10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.prc-name{flex:1;font-size:13px;color:var(--text-secondary)}
+.prc-inp{width:110px;padding:7px 10px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13px;text-align:left}
+.prc-inp:focus{border-color:var(--gold)}
+.progress-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:10px}
+.progress-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.detail-row{display:flex;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{width:42%;font-size:12px;color:var(--text-dim);font-weight:500}
+.detail-value{flex:1;font-size:13px;color:var(--text-primary);font-weight:500}
+.settings-section{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:18px}
+.settings-section h3{font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.sec-title{font-size:16px;font-weight:700;color:var(--text-primary)}
+.sec-sub{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.wv-hdr{background:linear-gradient(135deg,var(--bg-card),var(--bg-card2));border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:24px;display:flex;align-items:center;gap:20px}
+.wv-avatar{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--rose),#f472b6);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;flex-shrink:0}
+/* RESPONSIVE */
+@media(max-width:1200px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){
+  :root{--sidebar-w:0px}
+  .sidebar{transform:translateX(100%)}
+  .sidebar.open{transform:translateX(0);width:260px}
+  .main-content{margin-right:0!important}
+  .mobile-overlay.visible{display:block}
+  .form-grid{grid-template-columns:1fr}
+  .prc-grid{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .fin-row{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .stat-grid{grid-template-columns:1fr}
+  .page-content{padding:16px}
+  .modal{margin:0;border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:92vh;overflow-y:auto}
+  .modal-overlay{align-items:flex-end;padding:0}
+  .today-grid{grid-template-columns:1fr}
+  .fin-row{grid-template-columns:1fr}
+  th,td{padding:10px 12px}
+  .auth-card{padding:32px 24px;border-radius:20px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+
+// ── FIREBASE CRUD ─────────────────────────────────────────────────────────────
+const DB={
+  listen:(col,cb)=>{
+    if(!window.__db)return()=>{};
+    return window.__db.collection(col).onSnapshot(snap=>{
+      cb(snap.docs.map(d=>({...d.data(),id:d.id})));
+    },err=>console.error('listen error:',err));
+  },
+  set:(col,id,data)=>window.__db.collection(col).doc(id).set({...data,_ts:Date.now()},{merge:true}),
+  update:(col,id,data)=>window.__db.collection(col).doc(id).update({...data,_ts:Date.now()}),
+  delete:(col,id)=>window.__db.collection(col).doc(id).delete(),
+};
+
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const SERVICES=['تصديرة','كورتاج','لبسة ليل','حنة نساء','حنة رجال','عقد بلدية','خطبة','جلسة تصوير','فيديو','خدمات أخرى'];
+const SC={'تصديرة':'gold','كورتاج':'rose','لبسة ليل':'purple','حنة نساء':'teal','حنة رجال':'blue','عقد بلدية':'gold','خطبة':'rose','جلسة تصوير':'teal','فيديو':'purple','خدمات أخرى':'gray'};
+const NOW=new Date();
+const fmtDate=d=>{if(!d)return'';return new Date(d).toLocaleDateString('ar-DZ',{weekday:'long',year:'numeric',month:'long',day:'numeric'})};
+const fmtShort=d=>{if(!d)return'';return new Date(d).toLocaleDateString('ar-DZ',{year:'numeric',month:'2-digit',day:'2-digit'})};
+const fmtMoney=n=>`${(n||0).toLocaleString('ar-DZ')} DA`;
+const calcTransport=(city,dist,type)=>{
+  if(city==='aflou')return 0;
+  if(type==='client')return Number(dist)*100;
+  if(type==='ours')return Number(dist)*30*2+Math.floor(Number(dist)/100)*10000;
+  return 0;
+};
+const isToday=d=>{const dt=new Date(d);return dt.getDate()===NOW.getDate()&&dt.getMonth()===NOW.getMonth()&&dt.getFullYear()===NOW.getFullYear()};
+const getStatus=b=>{const p=b.paid||0,t=b.totalPrice||0;if(p<=0)return{l:'غير مدفوع',c:'badge-danger'};if(p>=t)return{l:'مدفوع بالكامل',c:'badge-success'};return{l:'دفع جزئي',c:'badge-warning'}};
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+const ACCOUNTS={
+  admin:{user:'admin',pass:'artinnova2025',role:'admin',name:'المدير'},
+  worker:{user:'worker',pass:'worker123',role:'worker',name:'عمال',workerId:'w1'}
+};
+const AuthScreen=({onLogin})=>{
+  const [tab,setTab]=useState('admin');
+  const [form,setForm]=useState({user:'',pass:''});
+  const [err,setErr]=useState('');
+  const login=()=>{
+    const acc=ACCOUNTS[tab];
+    if(form.user===acc.user&&form.pass===acc.pass)onLogin({...acc});
+    else setErr('بيانات الدخول غير صحيحة');
+  };
+  return(
+    <div className="auth-page">
+      <div className="auth-bg-orb"/><div className="auth-bg-orb"/>
+      <div className="auth-card fade-in">
+        <div className="auth-logo">
+          <div className="auth-logo-icon">📷</div>
+          <h1>Artinnova Studio</h1>
+          <p>نظام إدارة استوديو التصوير</p>
+        </div>
+        <div className="auth-tabs">
+          <button className={`auth-tab${tab==='admin'?' active':''}`} onClick={()=>{setTab('admin');setErr('')}}>المدير</button>
+          <button className={`auth-tab${tab==='worker'?' active':''}`} onClick={()=>{setTab('worker');setErr('')}}>الخدامة</button>
+        </div>
+        {err&&<div className="auth-error">⚠ {err}</div>}
+        <div className="form-group">
+          <label className="form-label">اسم المستخدم</label>
+          <input className="form-input" placeholder={tab==='admin'?'admin':'worker'} value={form.user} onChange={e=>setForm({...form,user:e.target.value})} onKeyDown={e=>e.key==='Enter'&&login()}/>
+        </div>
+        <div className="form-group">
+          <label className="form-label">كلمة المرور</label>
+          <input className="form-input" type="password" placeholder="••••••••" value={form.pass} onChange={e=>setForm({...form,pass:e.target.value})} onKeyDown={e=>e.key==='Enter'&&login()}/>
+        </div>
+        <button className="btn-primary" onClick={login}>تسجيل الدخول</button>
+        <p style={{textAlign:'center',color:'var(--text-dim)',fontSize:'11px',marginTop:'16px'}}>{tab==='admin'?'admin / artinnova2025':'worker / worker123'}</p>
+      </div>
+    </div>
+  );
+};
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────────────
+const Sidebar=({user,page,setPage,open,setOpen,sync})=>{
+  const adminNav=[{id:'dashboard',i:'⊞',l:'لوحة التحكم'},{id:'today',i:'🌅',l:'أعراس اليوم'},{id:'bookings',i:'📋',l:'الحجوزات'},{id:'workers',i:'👥',l:'الخدامات'},{id:'finance',i:'💰',l:'المحاسبة'},{id:'settings',i:'⚙',l:'الإعدادات'}];
+  const workerNav=[{id:'worker-today',i:'🌅',l:'مواعيدي اليوم'},{id:'worker-bookings',i:'📋',l:'أعمالي'}];
+  const nav=user.role==='admin'?adminNav:workerNav;
+  return(
+    <>
+      <div className={`mobile-overlay${open?' visible':''}`} onClick={()=>setOpen(false)}/>
+      <aside className={`sidebar${open?' open':''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <div className="brand-icon">📷</div>
+            <div className="brand-text">
+              <h2>Artinnova</h2>
+              <p><span className={`sync-dot ${sync}`}/>{sync==='online'?'متزامن':sync==='syncing'?'جارٍ...':'غير متصل'}</p>
+            </div>
+          </div>
+        </div>
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <div className="nav-section-label">القائمة</div>
+            {nav.map(item=>(
+              <button key={item.id} className={`nav-item${page===item.id?' active':''}`} onClick={()=>{setPage(item.id);setOpen(false)}}>
+                <span className="nav-icon">{item.i}</span>{item.l}
+              </button>
+            ))}
+          </div>
+        </nav>
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="user-avatar">{user.name.charAt(0)}</div>
+            <div className="user-info">
+              <div className="user-name">{user.name}</div>
+              <div className="user-role">{user.role==='admin'?'مدير النظام':'خدامة'}</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+// ── BOOKING MODAL ─────────────────────────────────────────────────────────────
+const BookingModal=({booking,workers,onSave,onClose})=>{
+  const isEdit=!!booking?.id;
+  const blank={groom:'',phone:'',date:'',time:'',location:'',city:'aflou',distance:0,services:[],prices:{},totalPrice:0,paid:0,transport:'none',transportCost:0,workers:[],workerFees:{},notes:''};
+  const [form,setForm]=useState(isEdit?{...booking}:{...blank});
+  const [step,setStep]=useState(1);
+  const [saving,setSaving]=useState(false);
+  const toggleSvc=s=>{
+    const has=form.services.includes(s);
+    const svcs=has?form.services.filter(x=>x!==s):[...form.services,s];
+    const prices={...form.prices};if(has)delete prices[s];
+    setForm(f=>({...f,services:svcs,prices}));
+  };
+  useEffect(()=>{
+    const st=Object.values(form.prices).reduce((a,b)=>a+b,0);
+    const tc=calcTransport(form.city,form.distance,form.transport);
+    setForm(f=>({...f,transportCost:tc,totalPrice:st}));
+  },[form.city,form.distance,form.transport,JSON.stringify(form.prices)]);
+  const toggleWorker=wid=>{
+    const has=form.workers.some(w=>w.workerId===wid);
+    setForm(f=>({...f,workers:has?f.workers.filter(w=>w.workerId!==wid):[...f.workers,{workerId:wid,services:[]}]}));
+  };
+  const handleSave=async()=>{
+    if(!form.groom||!form.date){alert('يرجى إدخال اسم العريس والتاريخ');return;}
+    setSaving(true);
+    try{await onSave(form);}catch(e){alert('خطأ في الحفظ: '+e.message);}
+    setSaving(false);onClose();
+  };
+  const svcTotal=Object.values(form.prices).reduce((a,b)=>a+b,0);
+  const netProfit=svcTotal+form.transportCost-Object.values(form.workerFees).reduce((a,b)=>a+b,0);
+  const tc1=calcTransport('outside',form.distance,'ours');
+  const tc2=calcTransport('outside',form.distance,'client');
+  return(
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal modal-xl fade-in">
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{isEdit?'✎ تعديل الحجز':'💍 حجز جديد'}</div>
+            <div style={{fontSize:'12px',color:'var(--text-secondary)',marginTop:'4px'}}>الخطوة {step}/3 — {['معلومات العرس','الخدمات والأسعار','الخدامات والدفع'][step-1]}</div>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          {step===1&&<div className="form-grid">
+            <div className="fsec">📋 معلومات العريس</div>
+            <div className="fg"><label className="fl">اسم ولقب العريس *</label><input className="fc" placeholder="أحمد بن علي" value={form.groom} onChange={e=>setForm({...form,groom:e.target.value})}/></div>
+            <div className="fg"><label className="fl">رقم الهاتف</label><input className="fc" placeholder="0661234567" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></div>
+            <div className="fg"><label className="fl">تاريخ العرس *</label><input className="fc" type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})}/></div>
+            <div className="fg"><label className="fl">وقت العرس</label><input className="fc" type="time" value={form.time} onChange={e=>setForm({...form,time:e.target.value})}/></div>
+            <div className="fg form-full"><label className="fl">مكان العرس</label><input className="fc" placeholder="قاعة الأفراح..." value={form.location} onChange={e=>setForm({...form,location:e.target.value})}/></div>
+            <div className="fsec">🚗 التنقل</div>
+            <div className="fg"><label className="fl">المدينة</label>
+              <select className="fc" value={form.city} onChange={e=>setForm({...form,city:e.target.value,transport:'none'})}>
+                <option value="aflou">أفلو (محلي)</option><option value="outside">خارج أفلو</option>
+              </select>
+            </div>
+            {form.city==='outside'&&<>
+              <div className="fg"><label className="fl">المسافة (كم)</label><input className="fc" type="number" min="0" value={form.distance} onChange={e=>setForm({...form,distance:e.target.value})}/></div>
+              <div className="fg form-full"><label className="fl">نوع التنقل</label>
+                <select className="fc" value={form.transport} onChange={e=>setForm({...form,transport:e.target.value})}>
+                  <option value="none">بدون تنقل</option>
+                  <option value="ours">علينا — {tc1.toLocaleString()} DA</option>
+                  <option value="client">على الزبون — {tc2.toLocaleString()} DA</option>
+                </select>
+              </div>
+            </>}
+            {form.transportCost>0&&<div className="form-full"><div className="alert a-info">🚗 تكلفة التنقل: <strong>{fmtMoney(form.transportCost)}</strong></div></div>}
+            <div className="fg form-full"><label className="fl">ملاحظات</label><textarea className="fc" placeholder="ملاحظات..." value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})}/></div>
+          </div>}
+          {step===2&&<div className="form-grid">
+            <div className="fsec">🎬 اختر الخدمات</div>
+            <div className="chk-group">{SERVICES.map(s=><div key={s} className={`chk-item${form.services.includes(s)?' on':''}`} onClick={()=>toggleSvc(s)}><div className="chk-dot">{form.services.includes(s)?'✓':''}</div>{s}</div>)}</div>
+            {form.services.length>0&&<>
+              <div className="fsec">💰 الأسعار</div>
+              <div className="prc-grid">{form.services.map(s=><div key={s} className="prc-row"><span className="prc-name">{s}</span><input className="prc-inp" type="number" placeholder="0" value={form.prices[s]||''} onChange={e=>setForm(f=>({...f,prices:{...f.prices,[s]:Number(e.target.value)||0}}))} dir="ltr"/><span style={{fontSize:'12px',color:'var(--text-dim)'}}>DA</span></div>)}</div>
+              <div className="form-full"><div style={{background:'var(--gold-dim)',border:'1px solid rgba(201,168,76,.3)',borderRadius:'12px',padding:'14px 18px',display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--gold)',fontWeight:600}}>إجمالي الخدمات</span><span style={{color:'var(--gold2)',fontWeight:800,fontSize:'18px'}}>{fmtMoney(svcTotal)}</span></div></div>
+            </>}
+            {form.services.length===0&&<div className="form-full"><div className="alert a-warn">⚠ اختر خدمة واحدة على الأقل</div></div>}
+          </div>}
+          {step===3&&<div className="form-grid">
+            <div className="fsec">👥 تعيين الخدامات</div>
+            {workers.filter(w=>w.active).map(w=>{
+              const on=form.workers.some(fw=>fw.workerId===w.id);
+              return<div key={w.id} style={{background:'var(--bg-secondary)',border:`1px solid ${on?'rgba(201,168,76,.4)':'var(--border)'}`,borderRadius:'12px',padding:'14px 16px',gridColumn:'1/-1',display:'flex',alignItems:'center',justifyContent:'space-between',gap:'12px',cursor:'pointer'}} onClick={()=>toggleWorker(w.id)}>
+                <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+                  <div style={{width:'40px',height:'40px',borderRadius:'12px',background:'linear-gradient(135deg,var(--rose),#f472b6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:'16px'}}>{w.name.charAt(0)}</div>
+                  <div><div style={{fontWeight:600,color:'var(--text-primary)'}}>{w.name}</div><div style={{fontSize:'12px',color:'var(--text-secondary)'}}>{w.role}</div></div>
+                </div>
+                {on&&<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                  <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>الأجر:</span>
+                  <input className="fc" type="number" style={{width:'100px',padding:'7px 10px',fontSize:'13px'}} placeholder="0" value={form.workerFees[w.id]||''} onChange={e=>{e.stopPropagation();setForm(f=>({...f,workerFees:{...f.workerFees,[w.id]:Number(e.target.value)||0}}))}} onClick={e=>e.stopPropagation()} dir="ltr"/>
+                  <span style={{fontSize:'12px',color:'var(--text-dim)'}}>DA</span>
+                </div>}
+                <div style={{width:'24px',height:'24px',borderRadius:'6px',background:on?'var(--gold)':'transparent',border:`2px solid ${on?'var(--gold)':'var(--border2)'}`,display:'flex',alignItems:'center',justifyContent:'center',color:'#000',fontSize:'13px',fontWeight:700,flexShrink:0}}>{on?'✓':''}</div>
+              </div>;
+            })}
+            <div className="fsec">💵 الدفع</div>
+            <div className="fg"><label className="fl">المبلغ المدفوع (DA)</label><input className="fc" type="number" placeholder="0" value={form.paid} onChange={e=>setForm({...form,paid:Number(e.target.value)||0})} dir="ltr"/></div>
+            <div className="fg">
+              <div style={{background:'var(--bg-secondary)',border:'1px solid var(--border)',borderRadius:'10px',padding:'12px 14px',marginTop:'auto'}}>
+                {[['إجمالي الخدمات',fmtMoney(svcTotal),'var(--text-primary)'],['التنقل',fmtMoney(form.transportCost),'var(--text-primary)'],['أجور الخدامات',fmtMoney(Object.values(form.workerFees).reduce((a,b)=>a+b,0)),'var(--rose)']].map(([l,v,c])=><div key={l} style={{display:'flex',justifyContent:'space-between',marginBottom:'6px'}}><span style={{fontSize:'12px',color:'var(--text-secondary)'}}>{l}</span><span style={{fontWeight:600,color:c}}>{v}</span></div>)}
+                <div style={{borderTop:'1px solid var(--border)',paddingTop:'6px',display:'flex',justifyContent:'space-between'}}><span style={{fontSize:'12px',color:'var(--gold)',fontWeight:600}}>صافي الربح</span><span style={{fontWeight:800,color:'var(--gold2)'}}>{fmtMoney(netProfit)}</span></div>
+              </div>
+            </div>
+          </div>}
+        </div>
+        <div className="modal-footer">
+          {step>1&&<button className="btn btn-outline" onClick={()=>setStep(s=>s-1)}>⟵ السابق</button>}
+          <button className="btn btn-outline" onClick={onClose}>إلغاء</button>
+          {step<3&&<button className="btn btn-gold" onClick={()=>setStep(s=>s+1)}>التالي ⟶</button>}
+          {step===3&&<button className="btn btn-gold" onClick={handleSave} disabled={saving}>{saving?'⏳ جارٍ الحفظ...':'💾 حفظ الحجز'}</button>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── BOOKING DETAIL ────────────────────────────────────────────────────────────
+const BookingDetail=({booking,workers,onClose,onEdit,onDelete,isAdmin})=>{
+  const st=getStatus(booking);
+  const fees=Object.values(booking.workerFees||{}).reduce((a,b)=>a+b,0);
+  const rem=(booking.totalPrice||0)-(booking.paid||0);
+  const profit=(booking.totalPrice||0)+(booking.transportCost||0)-fees;
+  return(
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal modal-xl fade-in">
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">💍 {booking.groom}</div>
+            <div style={{display:'flex',gap:'8px',marginTop:'8px',flexWrap:'wrap'}}>
+              <span className={`badge ${st.c}`}>{st.l}</span>
+              {booking.services.map(s=><span key={s} className={`badge badge-${SC[s]||'gray'}`}>{s}</span>)}
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px',marginBottom:'16px'}}>
+            <div style={{background:'var(--bg-secondary)',border:'1px solid var(--border)',borderRadius:'14px',padding:'16px'}}>
+              <div style={{fontSize:'11px',color:'var(--text-dim)',fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'12px'}}>معلومات العرس</div>
+              {[['📅 التاريخ',fmtDate(booking.date)],['🕐 الوقت',booking.time||'—'],['📍 المكان',booking.location||'—'],['📞 الهاتف',booking.phone||'—']].map(([l,v])=><div key={l} className="detail-row"><div className="detail-label">{l}</div><div className="detail-value">{v}</div></div>)}
+              {booking.notes&&<div className="detail-row"><div className="detail-label">📝 ملاحظات</div><div className="detail-value">{booking.notes}</div></div>}
+            </div>
+            {isAdmin&&<div style={{background:'var(--bg-secondary)',border:'1px solid var(--border)',borderRadius:'14px',padding:'16px'}}>
+              <div style={{fontSize:'11px',color:'var(--text-dim)',fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'12px'}}>الحسابات المالية</div>
+              {[['💰 إجمالي الخدمات',fmtMoney(booking.totalPrice),'var(--text-primary)'],booking.transportCost>0&&['🚗 التنقل',fmtMoney(booking.transportCost),'var(--text-primary)'],['✅ المدفوع',fmtMoney(booking.paid),'var(--success)'],['⏳ المتبقي',fmtMoney(rem),rem>0?'var(--rose)':'var(--success)'],['👥 أجور الخدامات',fmtMoney(fees),'var(--rose)']].filter(Boolean).map(([l,v,c])=><div key={l} className="detail-row"><div className="detail-label">{l}</div><div className="detail-value" style={{color:c,fontWeight:600}}>{v}</div></div>)}
+              <div style={{borderTop:'1px solid var(--border)',paddingTop:'12px',marginTop:'4px',display:'flex',justifyContent:'space-between'}}><span style={{fontSize:'12px',color:'var(--gold)',fontWeight:700}}>💵 صافي الربح</span><span style={{fontWeight:800,color:'var(--gold2)',fontSize:'16px'}}>{fmtMoney(profit)}</span></div>
+            </div>}
+          </div>
+          {booking.workers?.length>0&&<div style={{background:'var(--bg-secondary)',border:'1px solid var(--border)',borderRadius:'14px',padding:'16px'}}>
+            <div style={{fontSize:'11px',color:'var(--text-dim)',fontWeight:700,textTransform:'uppercase',letterSpacing:'1px',marginBottom:'12px'}}>👥 الخدامات المعيّنة</div>
+            {booking.workers.map(wa=>{const w=workers.find(x=>x.id===wa.workerId);return w?(<div key={wa.workerId} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid rgba(255,255,255,.04)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                <div style={{width:'32px',height:'32px',borderRadius:'8px',background:'linear-gradient(135deg,var(--rose),#f472b6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:'13px'}}>{w.name.charAt(0)}</div>
+                <span style={{fontWeight:600,color:'var(--text-primary)'}}>{w.name}</span>
+              </div>
+              {isAdmin&&<span style={{color:'var(--gold)',fontWeight:600}}>{fmtMoney(booking.workerFees?.[wa.workerId]||0)}</span>}
+            </div>):null})}
+          </div>}
+        </div>
+        {isAdmin?<div className="modal-footer">
+          <button className="btn btn-danger btn-sm" onClick={()=>{onDelete(booking.id);onClose()}}>🗑 حذف</button>
+          <button className="btn btn-outline btn-sm" onClick={onClose}>إغلاق</button>
+          <button className="btn btn-gold btn-sm" onClick={()=>{onEdit(booking);onClose()}}>✎ تعديل</button>
+        </div>:<div className="modal-footer"><button className="btn btn-outline" onClick={onClose}>إغلاق</button></div>}
+      </div>
+    </div>
+  );
+};
+
+// ── PAGES ─────────────────────────────────────────────────────────────────────
+const DashboardPage=({bookings,workers,setPage})=>{
+  const todayB=bookings.filter(b=>isToday(b.date));
+  const upcoming=[...bookings].filter(b=>new Date(b.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,6);
+  const totRev=bookings.reduce((s,b)=>s+(b.totalPrice||0),0);
+  const totPaid=bookings.reduce((s,b)=>s+(b.paid||0),0);
+  const totFees=bookings.reduce((s,b)=>s+Object.values(b.workerFees||{}).reduce((a,c)=>a+c,0),0);
+  const netProfit=totPaid-totFees;
+  return(
+    <div className="fade-in">
+      <div className="stat-grid">
+        {[['gold','💍',bookings.length,'إجمالي الحجوزات',`${todayB.length} اليوم`],['rose','💰',(totRev/1000).toFixed(0)+'K','إجمالي الإيرادات',`DA ${totRev.toLocaleString()}`],['teal','✅',(totPaid/1000).toFixed(0)+'K','المبلغ المحصّل',`DA ${totPaid.toLocaleString()}`],['purple','📈',(netProfit/1000).toFixed(0)+'K','صافي الربح','بعد خصم الخدامات']].map(([c,i,v,l,s])=>(
+          <div key={l} className={`stat-card ${c}`}><div className="stat-icon">{i}</div><div className="stat-value">{v}</div><div className="stat-label">{l}</div><div className="stat-sub">{s}</div></div>
+        ))}
+      </div>
+      {todayB.length>0&&<div className="alert a-warn" style={{marginBottom:'20px'}}>🌅 <strong>اليوم {todayB.length} عرس</strong> — {todayB.map(b=>b.groom).join('، ')}<button className="btn btn-sm btn-outline" style={{marginRight:'auto'}} onClick={()=>setPage('today')}>عرض</button></div>}
+      <div className="card">
+        <div className="card-header"><div><div className="sec-title">📅 الحجوزات القادمة</div><div className="sec-sub">أقرب {upcoming.length} حجز</div></div><button className="btn btn-outline btn-sm" onClick={()=>setPage('bookings')}>عرض الكل</button></div>
+        <div className="table-wrap"><table>
+          <thead><tr><th>العريس</th><th>التاريخ</th><th>المكان</th><th>الخدمات</th><th>الحالة</th><th>المبلغ</th></tr></thead>
+          <tbody>
+            {upcoming.length===0&&<tr><td colSpan="6"><div className="empty-state"><div className="empty-icon">📋</div><div className="empty-title">لا توجد حجوزات قادمة</div></div></td></tr>}
+            {upcoming.map(b=>{const s=getStatus(b);return(<tr key={b.id}>
+              <td><div className="td-main">💍 {b.groom}</div><div style={{fontSize:'11px',color:'var(--text-dim)'}}>{b.phone}</div></td>
+              <td>{fmtShort(b.date)}</td>
+              <td style={{maxWidth:'140px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{b.location||'—'}</td>
+              <td><div style={{display:'flex',gap:'4px',flexWrap:'wrap'}}>{b.services.slice(0,2).map(sv=><span key={sv} className={`badge badge-${SC[sv]||'gray'}`}>{sv}</span>)}{b.services.length>2&&<span className="badge badge-gray">+{b.services.length-2}</span>}</div></td>
+              <td><span className={`badge ${s.c}`}>{s.l}</span></td>
+              <td style={{fontWeight:700,color:'var(--gold)'}}>{fmtMoney(b.totalPrice)}</td>
+            </tr>);})}
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  );
+};
+
+const TodayPage=({bookings,workers})=>{
+  const today=bookings.filter(b=>isToday(b.date));
+  return(
+    <div className="fade-in">
+      <div className="alert a-info" style={{marginBottom:'20px'}}>📅 <strong>{fmtDate(new Date().toISOString())}</strong>{today.length===0?' — لا توجد أعراس اليوم':` — ${today.length} عرس`}</div>
+      {today.length===0&&<div className="empty-state"><div className="empty-icon">🌅</div><div className="empty-title">لا توجد أعراس اليوم</div></div>}
+      <div className="today-grid">{today.map((b,i)=>{
+        const ws=b.workers?.map(wa=>{const w=workers.find(x=>x.id===wa.workerId);return w?.name}).filter(Boolean)||[];
+        return(<div key={b.id} className={`today-card ${['ta','tb','tc'][i%3]}`}>
+          <div className="today-card-hdr"><div className="today-name">💍 {b.groom}</div>{b.time&&<div className="today-time">🕐 {b.time}</div>}</div>
+          <div className="info-row"><span>📍</span><span>{b.location||'—'}</span></div>
+          <div className="info-row"><span>📞</span><span dir="ltr">{b.phone||'—'}</span></div>
+          {b.city==='outside'&&<div className="info-row"><span>🚗</span><span>خارج أفلو — {b.distance}كم</span></div>}
+          {ws.length>0&&<div className="info-row"><span>👤</span><span>{ws.join('، ')}</span></div>}
+          <div className="svc-list">{b.services.map(s=><span key={s} className={`badge badge-${SC[s]||'gray'}`}>{s}</span>)}</div>
+          <div style={{marginTop:'14px',paddingTop:'12px',borderTop:'1px solid rgba(255,255,255,.06)',display:'flex',justifyContent:'space-between'}}>
+            <span style={{fontSize:'12px',color:'var(--text-secondary)'}}>الإجمالي</span>
+            <span style={{fontWeight:700,color:'var(--gold2)'}}>{fmtMoney(b.totalPrice)}</span>
+          </div>
+        </div>);
+      })}</div>
+    </div>
+  );
+};
+
+const BookingsPage=({bookings,workers,onSave,onDelete,isAdmin})=>{
+  const [showModal,setShowModal]=useState(false);
+  const [editing,setEditing]=useState(null);
+  const [detail,setDetail]=useState(null);
+  const [search,setSearch]=useState('');
+  const [filter,setFilter]=useState('all');
+  const filtered=bookings.filter(b=>{
+    const ms=!search||b.groom.includes(search)||b.phone?.includes(search)||b.location?.includes(search);
+    const mf=filter==='all'||(filter==='today'&&isToday(b.date))||(filter==='upcoming'&&new Date(b.date)>=new Date())||(filter==='paid'&&(b.paid||0)>=(b.totalPrice||0))||(filter==='unpaid'&&(b.paid||0)<(b.totalPrice||0));
+    return ms&&mf;
+  }).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  return(
+    <div className="fade-in">
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'20px',flexWrap:'wrap',gap:'12px'}}>
+        <div><div className="sec-title">الحجوزات</div><div className="sec-sub">{bookings.length} حجز إجمالاً</div></div>
+        {isAdmin&&<button className="btn btn-gold" onClick={()=>{setEditing(null);setShowModal(true)}}>＋ حجز جديد</button>}
+      </div>
+      <div style={{display:'flex',gap:'12px',marginBottom:'16px',flexWrap:'wrap',alignItems:'center'}}>
+        <div className="search-bar" style={{flex:'1',minWidth:'200px'}}><span style={{color:'var(--text-dim)'}}>🔍</span><input placeholder="بحث..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <div className="filter-row">{[['all','الكل'],['today','اليوم'],['upcoming','القادمة'],['paid','مدفوع'],['unpaid','غير مدفوع']].map(([v,l])=><button key={v} className={`fbtn${filter===v?' on':''}`} onClick={()=>setFilter(v)}>{l}</button>)}</div>
+      </div>
+      <div className="card"><div className="table-wrap"><table>
+        <thead><tr><th>العريس</th><th>التاريخ</th><th>المكان</th><th>الخدمات</th>{isAdmin&&<><th>الإجمالي</th><th>المدفوع</th><th>الحالة</th></>}<th></th></tr></thead>
+        <tbody>
+          {filtered.length===0&&<tr><td colSpan="8"><div className="empty-state"><div className="empty-icon">🔍</div><div className="empty-title">لا توجد نتائج</div></div></td></tr>}
+          {filtered.map(b=>{const s=getStatus(b);const rem=(b.totalPrice||0)-(b.paid||0);return(
+            <tr key={b.id} style={{cursor:'pointer'}} onClick={()=>setDetail(b)}>
+              <td><div className="td-main">💍 {b.groom}</div><div style={{fontSize:'11px',color:'var(--text-dim)'}}>{b.phone}</div></td>
+              <td><div style={{fontWeight:500,color:'var(--text-primary)'}}>{fmtShort(b.date)}</div>{b.time&&<div style={{fontSize:'11px',color:'var(--text-dim)'}}>🕐 {b.time}</div>}</td>
+              <td style={{maxWidth:'130px'}}><div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{b.location||'—'}</div></td>
+              <td><div style={{display:'flex',gap:'4px',flexWrap:'wrap'}}>{b.services.slice(0,2).map(sv=><span key={sv} className={`badge badge-${SC[sv]||'gray'}`}>{sv}</span>)}{b.services.length>2&&<span className="badge badge-gray">+{b.services.length-2}</span>}</div></td>
+              {isAdmin&&<><td style={{fontWeight:700,color:'var(--gold)'}}>{fmtMoney(b.totalPrice)}</td>
+              <td><div style={{color:'var(--success)',fontWeight:600}}>{fmtMoney(b.paid)}</div>{rem>0&&<div style={{fontSize:'11px',color:'var(--rose)'}}>متبقي: {fmtMoney(rem)}</div>}</td>
+              <td><span className={`badge ${s.c}`}>{s.l}</span></td></>}
+              <td onClick={e=>e.stopPropagation()}><div style={{display:'flex',gap:'6px'}}>
+                <button className="btn btn-sm btn-outline btn-icon" onClick={()=>setDetail(b)}>👁</button>
+                {isAdmin&&<><button className="btn btn-sm btn-outline btn-icon" onClick={()=>{setEditing(b);setShowModal(true)}}>✎</button><button className="btn btn-sm btn-danger btn-icon" onClick={()=>onDelete(b.id)}>🗑</button></>}
+              </div></td>
+            </tr>
+          );})}
+        </tbody>
+      </table></div></div>
+      {showModal&&<BookingModal booking={editing} workers={workers} onSave={onSave} onClose={()=>setShowModal(false)}/>}
+      {detail&&<BookingDetail booking={detail} workers={workers} onClose={()=>setDetail(null)} onEdit={b=>{setEditing(b);setShowModal(true)}} onDelete={onDelete} isAdmin={isAdmin}/>}
+    </div>
+  );
+};
+
+const WorkersPage=({workers,bookings,onSaveWorker,onDeleteWorker})=>{
+  const [showModal,setShowModal]=useState(false);
+  const [form,setForm]=useState({name:'',role:'مصورة',phone:''});
+  const [editId,setEditId]=useState(null);
+  const [saving,setSaving]=useState(false);
+  const handleSave=async()=>{
+    if(!form.name){alert('يرجى إدخال الاسم');return;}
+    setSaving(true);try{await onSaveWorker(editId,form);}catch(e){alert('خطأ: '+e.message);}
+    setSaving(false);setShowModal(false);setForm({name:'',role:'مصورة',phone:''});setEditId(null);
+  };
+  const getStats=wid=>({count:bookings.filter(b=>b.workers?.some(w=>w.workerId===wid)).length,fees:bookings.reduce((s,b)=>s+(b.workerFees?.[wid]||0),0)});
+  return(
+    <div className="fade-in">
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'24px'}}>
+        <div><div className="sec-title">👥 الخدامات</div><div className="sec-sub">{workers.length} مسجلة</div></div>
+        <button className="btn btn-gold" onClick={()=>{setForm({name:'',role:'مصورة',phone:''});setEditId(null);setShowModal(true)}}>＋ إضافة</button>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:'16px'}}>
+        {workers.map(w=>{const st=getStats(w.id);return(
+          <div key={w.id} className="worker-card">
+            <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'14px'}}>
+              <div className="w-avatar">{w.name.charAt(0)}</div>
+              <div style={{display:'flex',gap:'6px'}}>
+                <button className="btn btn-sm btn-outline btn-icon" onClick={()=>{setForm({name:w.name,role:w.role,phone:w.phone||''});setEditId(w.id);setShowModal(true)}}>✎</button>
+                <button className="btn btn-sm btn-danger btn-icon" onClick={()=>onDeleteWorker(w.id)}>🗑</button>
+              </div>
+            </div>
+            <div className="w-name">{w.name}</div><div className="w-role">{w.role}</div>
+            {w.phone&&<div style={{fontSize:'12px',color:'var(--text-dim)',marginTop:'4px'}} dir="ltr">{w.phone}</div>}
+            <div className="w-stats">
+              <div className="w-stat"><div className="w-stat-val">{st.count}</div><div className="w-stat-lbl">عرس</div></div>
+              <div className="w-stat"><div className="w-stat-val" style={{fontSize:'14px'}}>{(st.fees/1000).toFixed(1)}K</div><div className="w-stat-lbl">DA</div></div>
+            </div>
+          </div>
+        );})}
+      </div>
+      {showModal&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowModal(false)}>
+        <div className="modal fade-in" style={{maxWidth:'440px'}}>
+          <div className="modal-header"><div className="modal-title">{editId?'تعديل الخدامة':'إضافة خدامة'}</div><button className="modal-close" onClick={()=>setShowModal(false)}>✕</button></div>
+          <div className="modal-body"><div className="form-grid">
+            <div className="fg form-full"><label className="fl">الاسم *</label><input className="fc" placeholder="الاسم الكامل" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></div>
+            <div className="fg"><label className="fl">الدور</label><select className="fc" value={form.role} onChange={e=>setForm({...form,role:e.target.value})}><option>مصورة</option><option>مساعدة</option><option>مصور</option><option>منسقة</option></select></div>
+            <div className="fg"><label className="fl">الهاتف</label><input className="fc" placeholder="0550000000" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} dir="ltr"/></div>
+          </div></div>
+          <div className="modal-footer"><button className="btn btn-outline" onClick={()=>setShowModal(false)}>إلغاء</button><button className="btn btn-gold" onClick={handleSave} disabled={saving}>{saving?'⏳...':'💾 حفظ'}</button></div>
+        </div>
+      </div>}
+    </div>
+  );
+};
+
+const FinancePage=({bookings,workers})=>{
+  const [period,setPeriod]=useState('all');
+  const now=new Date();
+  const fb=b=>{const d=new Date(b.date);if(period==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();if(period==='year')return d.getFullYear()===now.getFullYear();return true;};
+  const f=bookings.filter(fb);
+  const totRev=f.reduce((s,b)=>s+(b.totalPrice||0),0);
+  const totPaid=f.reduce((s,b)=>s+(b.paid||0),0);
+  const totRem=f.reduce((s,b)=>s+((b.totalPrice||0)-(b.paid||0)),0);
+  const totFees=f.reduce((s,b)=>s+Object.values(b.workerFees||{}).reduce((a,c)=>a+c,0),0);
+  const totTrans=f.reduce((s,b)=>s+(b.transportCost||0),0);
+  const netProfit=totPaid-totFees;
+  return(
+    <div className="fade-in">
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'20px',flexWrap:'wrap',gap:'12px'}}>
+        <div><div className="sec-title">💰 المحاسبة</div></div>
+        <div className="filter-row">{[['all','الكل'],['month','هذا الشهر'],['year','هذه السنة']].map(([v,l])=><button key={v} className={`fbtn${period===v?' on':''}`} onClick={()=>setPeriod(v)}>{l}</button>)}</div>
+      </div>
+      <div className="fin-row">
+        {[['💍 إجمالي العقود',fmtMoney(totRev),'c-neutral'],['✅ المحصّل',fmtMoney(totPaid),'c-income'],['⏳ المتبقي',fmtMoney(totRem),'c-expense'],['🚗 التنقل',fmtMoney(totTrans),'c-expense'],['👥 أجور الخدامات',fmtMoney(totFees),'c-expense'],['💵 صافي الدخل',fmtMoney(netProfit),'c-profit']].map(([l,v,c])=><div key={l} className="fin-card"><div className="fin-lbl">{l}</div><div className={`fin-val ${c}`}>{v}</div></div>)}
+      </div>
+      <div className="card" style={{marginBottom:'18px'}}>
+        <div className="card-header"><div className="sec-title">نسبة التحصيل</div></div>
+        <div className="card-body">
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}><span style={{fontSize:'13px',color:'var(--text-secondary)'}}>تم تحصيل {totRev>0?Math.round(totPaid/totRev*100):0}%</span><span style={{fontSize:'13px',color:'var(--text-secondary)'}}>{fmtMoney(totPaid)} / {fmtMoney(totRev)}</span></div>
+          <div className="progress-bar"><div className="progress-fill" style={{width:totRev>0?`${Math.min(100,totPaid/totRev*100)}%`:'0%',background:'linear-gradient(90deg,var(--teal),var(--success))'}}/></div>
+        </div>
+      </div>
+      <div className="card" style={{marginBottom:'18px'}}>
+        <div className="card-header"><div className="sec-title">👥 تفصيل الخدامات</div></div>
+        <div className="table-wrap"><table><thead><tr><th>الخدامة</th><th>عدد الأعراس</th><th>الأجر</th></tr></thead>
+        <tbody>{workers.map(w=>{const cnt=f.filter(b=>b.workers?.some(x=>x.workerId===w.id)).length;const fees=f.reduce((s,b)=>s+(b.workerFees?.[w.id]||0),0);return(<tr key={w.id}><td><div className="td-main">{w.name}</div></td><td><span className="badge badge-teal">{cnt} عرس</span></td><td style={{fontWeight:700,color:'var(--rose)'}}>{fmtMoney(fees)}</td></tr>);})}
+        {workers.length===0&&<tr><td colSpan="3"><div className="empty-state" style={{padding:'30px'}}><div className="empty-title">لا توجد بيانات</div></div></td></tr>}
+        </tbody></table></div>
+      </div>
+      <div className="card">
+        <div className="card-header"><div className="sec-title">📋 تفصيل الحجوزات</div></div>
+        <div className="table-wrap"><table><thead><tr><th>العريس</th><th>التاريخ</th><th>الخدمات</th><th>الإيراد</th><th>الأجور</th><th>الربح</th></tr></thead>
+        <tbody>{[...f].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(b=>{const fees=Object.values(b.workerFees||{}).reduce((a,c)=>a+c,0);const profit=(b.paid||0)-fees;return(<tr key={b.id}>
+          <td className="td-main">{b.groom}</td><td>{fmtShort(b.date)}</td>
+          <td><div style={{display:'flex',gap:'3px',flexWrap:'wrap'}}>{b.services.slice(0,2).map(s=><span key={s} className={`badge badge-${SC[s]||'gray'}`}>{s}</span>)}{b.services.length>2&&<span className="badge badge-gray">+{b.services.length-2}</span>}</div></td>
+          <td style={{fontWeight:600,color:'var(--success)'}}>{fmtMoney(b.paid)}</td>
+          <td style={{color:'var(--rose)'}}>{fmtMoney(fees)}</td>
+          <td style={{fontWeight:700,color:profit>=0?'var(--gold)':'var(--rose)'}}>{fmtMoney(profit)}</td>
+        </tr>);})}
+        {f.length===0&&<tr><td colSpan="6"><div className="empty-state" style={{padding:'30px'}}><div className="empty-title">لا توجد بيانات</div></div></td></tr>}
+        </tbody></table></div>
+      </div>
+    </div>
+  );
+};
+
+const SettingsPage=({bookings,workers})=>{
+  const exportData=()=>{
+    const blob=new Blob([JSON.stringify({bookings,workers,date:new Date().toISOString()},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='artinnova-backup.json';a.click();
+  };
+  return(
+    <div className="fade-in">
+      <div style={{marginBottom:'24px'}}><div className="sec-title">⚙ الإعدادات</div></div>
+      <div className="settings-section"><h3>🔥 حالة Firebase</h3>
+        <div className="alert a-success">✅ متصل بـ Firebase Firestore — البيانات تتزامن في الوقت الفعلي بين جميع الأجهزة</div>
+        <p style={{fontSize:'13px',color:'var(--text-secondary)'}}>المشروع: <strong style={{color:'var(--gold)'}}>artinnova-studio-87e28</strong></p>
+      </div>
+      <div className="settings-section"><h3>🔐 بيانات الدخول</h3>
+        <div style={{display:'flex',gap:'12px',flexWrap:'wrap'}}>
+          {[['المدير','admin','artinnova2025'],['الخدامة (عمال)','worker','worker123']].map(([role,u,p])=>(
+            <div key={u} style={{background:'var(--bg-secondary)',border:'1px solid var(--border)',borderRadius:'12px',padding:'14px 18px',flex:'1',minWidth:'180px'}}>
+              <div style={{fontSize:'12px',color:'var(--text-dim)',marginBottom:'6px'}}>{role}</div>
+              <div style={{fontWeight:600,color:'var(--text-primary)'}}>{u}</div>
+              <div style={{fontSize:'12px',color:'var(--text-secondary)',marginTop:'4px'}} dir="ltr">{p}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="settings-section"><h3>💾 النسخ الاحتياطي</h3>
+        <button className="btn btn-outline" onClick={exportData}>📤 تصدير JSON</button>
+      </div>
+    </div>
+  );
+};
+
+const WorkerBookingsPage=({bookings,workers,user,todayOnly})=>{
+  const mine=bookings.filter(b=>b.workers?.some(w=>w.workerId===user.workerId));
+  const list=todayOnly?mine.filter(b=>isToday(b.date)):mine;
+  const sorted=[...list].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  return(
+    <div className="fade-in">
+      <div className="wv-hdr">
+        <div className="wv-avatar">{user.name.charAt(0)}</div>
+        <div>
+          <div style={{fontSize:'20px',fontWeight:800,color:'var(--text-primary)'}}>مرحباً، {user.name}</div>
+          <div style={{fontSize:'14px',color:'var(--text-secondary)',marginTop:'4px'}}>{todayOnly?'مواعيدك اليوم':'جميع أعمالك'}</div>
+          <div style={{display:'flex',gap:'12px',marginTop:'12px'}}>
+            <span className="badge badge-gold">{mine.length} عرس إجمالاً</span>
+            <span className="badge badge-teal">{mine.filter(b=>isToday(b.date)).length} اليوم</span>
+          </div>
+        </div>
+      </div>
+      {sorted.length===0&&<div className="empty-state"><div className="empty-icon">🌅</div><div className="empty-title">{todayOnly?'لا توجد أعمال اليوم':'لم يتم تعيينك في أي عرس بعد'}</div></div>}
+      <div className="today-grid">{sorted.map((b,i)=>(
+        <div key={b.id} className={`today-card ${['ta','tb','tc'][i%3]}`}>
+          <div className="today-card-hdr"><div className="today-name">💍 {b.groom}</div>{b.time&&<div className="today-time">🕐 {b.time}</div>}</div>
+          <div className="info-row"><span>📅</span><span>{fmtDate(b.date)}</span></div>
+          <div className="info-row"><span>📍</span><span>{b.location||'—'}</span></div>
+          {b.city==='outside'&&<div className="info-row"><span>🚗</span><span>خارج أفلو — {b.distance}كم</span></div>}
+          {b.notes&&<div className="info-row"><span>📝</span><span>{b.notes}</span></div>}
+          <div className="svc-list">{b.services.map(s=><span key={s} className={`badge badge-${SC[s]||'gray'}`}>{s}</span>)}</div>
+        </div>
+      ))}</div>
+    </div>
+  );
+};
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
+const App=()=>{
+  const [ready,setReady]=useState(false);
+  const [user,setUser]=useState(()=>{try{const v=sessionStorage.getItem('art_user');return v?JSON.parse(v):null}catch{return null}});
+  const [bookings,setBookings]=useState([]);
+  const [workers,setWorkers]=useState([]);
+  const [page,setPage]=useState('dashboard');
+  const [sidebarOpen,setSidebarOpen]=useState(false);
+  const [sync,setSync]=useState('syncing');
+  const unsub=useRef([]);
+
+  useEffect(()=>{
+    // Firebase compat is synchronous init — check if ready
+    if(window.__fbReady){setReady(true);setSync('online');}
+    else{
+      // Retry every 300ms up to 5s
+      let tries=0;
+      const t=setInterval(()=>{
+        tries++;
+        if(window.__fbReady){setReady(true);setSync('online');clearInterval(t);}
+        else if(tries>16){setReady(true);setSync('offline');clearInterval(t);}
+      },300);
+      return()=>clearInterval(t);
+    }
+  },[]);
+
+  useEffect(()=>{
+    if(!ready||!window.__fbReady)return;
+    unsub.current.forEach(u=>u());
+    const u1=DB.listen('bookings',docs=>{setBookings(docs);setSync('online');});
+    const u2=DB.listen('workers',docs=>{
+      setWorkers(docs);setSync('online');
+      if(docs.length===0){
+        DB.set('workers','w1',{id:'w1',name:'عمال',role:'مصورة',phone:'',active:true});
+      }
+    });
+    unsub.current=[u1,u2];
+    return()=>unsub.current.forEach(u=>u());
+  },[ready]);
+
+  const login=u=>{setUser(u);sessionStorage.setItem('art_user',JSON.stringify(u));setPage(u.role==='admin'?'dashboard':'worker-today');};
+  const logout=()=>{setUser(null);sessionStorage.removeItem('art_user');};
+
+  const saveBooking=async(form)=>{
+    setSync('syncing');
+    const id=form.id||(bookings.find(b=>b.id===form.id)?form.id:'b'+Date.now());
+    await DB.set('bookings',id,{...form,id,createdAt:form.createdAt||new Date().toISOString()});
+    setSync('online');
+  };
+  const deleteBooking=async(id)=>{
+    if(!confirm('هل تريد حذف هذا الحجز؟'))return;
+    setSync('syncing');await DB.delete('bookings',id);setSync('online');
+  };
+  const saveWorker=async(editId,form)=>{
+    setSync('syncing');
+    if(editId)await DB.update('workers',editId,form);
+    else{const id='w'+Date.now();await DB.set('workers',id,{...form,id,active:true});}
+    setSync('online');
+  };
+  const deleteWorker=async(id)=>{
+    if(!confirm('حذف الخدامة؟'))return;
+    setSync('syncing');await DB.delete('workers',id);setSync('online');
+  };
+
+  if(!ready){return(
+    <div className="app-loading">
+      <div className="logo">📷</div>
+      <div style={{fontSize:'20px',fontWeight:800,color:'var(--gold2)'}}>Artinnova Studio</div>
+      <div className="spinner"/>
+      <p>جارٍ التحميل...</p>
+    </div>
+  );}
+
+  if(!user)return<AuthScreen onLogin={login}/>;
+
+  const todayCount=bookings.filter(b=>isToday(b.date)).length;
+  const PT={dashboard:{t:'لوحة التحكم',s:'نظرة عامة'},today:{t:'أعراس اليوم',s:'مجدول اليوم'},bookings:{t:'الحجوزات',s:'إدارة جميع الحجوزات'},workers:{t:'الخدامات',s:'إدارة فريق العمل'},finance:{t:'المحاسبة',s:'التقرير المالي'},settings:{t:'الإعدادات',s:''},'worker-today':{t:'مواعيدي اليوم',s:`مرحباً ${user.name}`},'worker-bookings':{t:'أعمالي',s:'الأعراس المعيّنة لك'}};
+  const pt=PT[page]||{t:'',s:''};
+
+  return(
+    <div className="app-layout">
+      <Sidebar user={user} page={page} setPage={setPage} open={sidebarOpen} setOpen={setSidebarOpen} sync={sync}/>
+      <div className="main-content">
+        <header className="top-header">
+          <button className="header-toggle" onClick={()=>setSidebarOpen(!sidebarOpen)}>☰</button>
+          <div className="header-title"><h1>{pt.t}</h1>{pt.s&&<p>{pt.s}</p>}</div>
+          <div className="header-actions">
+            {todayCount>0&&<div style={{display:'flex',alignItems:'center',gap:'6px',background:'var(--rose-dim)',border:'1px solid rgba(232,93,117,.3)',borderRadius:'10px',padding:'6px 12px'}}>
+              <span>🔔</span><span style={{fontSize:'12px',color:'var(--rose)',fontWeight:600}}>{todayCount} اليوم</span>
+            </div>}
+            <div style={{display:'flex',alignItems:'center',gap:'6px',background:'var(--bg-glass)',border:'1px solid var(--border)',borderRadius:'10px',padding:'6px 12px'}}>
+              <span className={`sync-dot ${sync}`}/>
+              <span style={{fontSize:'11px',color:'var(--text-secondary)'}}>{sync==='online'?'متزامن':sync==='syncing'?'جارٍ...':'غير متصل'}</span>
+            </div>
+            <div className="header-date">{new Date().toLocaleDateString('ar-DZ',{month:'short',day:'numeric'})}</div>
+            <button className="header-toggle" onClick={logout} style={{color:'var(--rose)'}} title="خروج">⏏</button>
+          </div>
+        </header>
+        <main className="page-content">
+          {page==='dashboard'&&user.role==='admin'&&<DashboardPage bookings={bookings} workers={workers} setPage={setPage}/>}
+          {page==='today'&&user.role==='admin'&&<TodayPage bookings={bookings} workers={workers}/>}
+          {page==='bookings'&&user.role==='admin'&&<BookingsPage bookings={bookings} workers={workers} onSave={saveBooking} onDelete={deleteBooking} isAdmin={true}/>}
+          {page==='workers'&&user.role==='admin'&&<WorkersPage workers={workers} bookings={bookings} onSaveWorker={saveWorker} onDeleteWorker={deleteWorker}/>}
+          {page==='finance'&&user.role==='admin'&&<FinancePage bookings={bookings} workers={workers}/>}
+          {page==='settings'&&user.role==='admin'&&<SettingsPage bookings={bookings} workers={workers}/>}
+          {page==='worker-today'&&user.role==='worker'&&<WorkerBookingsPage bookings={bookings} workers={workers} user={user} todayOnly={true}/>}
+          {page==='worker-bookings'&&user.role==='worker'&&<WorkerBookingsPage bookings={bookings} workers={workers} user={user} todayOnly={false}/>}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
